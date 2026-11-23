@@ -1,0 +1,56 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+env:
+  APP_ENV: test
+  API_INTERNAL_URL: http://localhost:8081
+  SITE_URL: http://localhost:3000
+  SESSION_COOKIE_SECURE: 'false'
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+  e2e:
+    # Full stack: the API (beautystore-api, local profile + demo seed + mock payments) and this app.
+    needs: checks
+    runs-on: ubuntu-latest
+    env: { APP_ENV: local }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { repository: neszaDev/beautystore-api, path: api }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21', cache: maven, cache-dependency-path: api/pom.xml }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: pnpm }
+      - name: Start Postgres + Mailpit and the API
+        working-directory: api
+        run: |
+          cp env/.env.example env/.env
+          docker compose --env-file env/.env up -d --wait postgres mailpit
+          set -a; source env/.env; set +a
+          nohup ./mvnw -B -q spring-boot:run > /tmp/api.log 2>&1 &
+      - run: pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium
+      - name: Build and start the web app
+        run: |
+          pnpm build
+          nohup pnpm start --port 3000 > /tmp/web.log 2>&1 &
+          npx --yes wait-on@8.0.3 -t 300000 http://localhost:8081/actuator/health http://localhost:3000/th
+      - run: pnpm e2e
+        env: { E2E_BASE_URL: http://localhost:3000 }
+      - if: failure()
+        run: tail -200 /tmp/api.log /tmp/web.log

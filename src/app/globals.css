@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/* PROVISIONAL design tokens (concept from the Stitch brief; replace when the owner approves a brand). */
+@theme {
+  --color-cream: #fff7f1;
+  --color-strawberry: #f45b83;
+  --color-cherry: #d92e55;
+  --color-cherry-deep: #b91f44; /* small text on cream: 6:1 */
+  --color-ink: #241b22;
+  --color-ink-soft: #5a4b57; /* secondary text on cream: 7:1 */
+  --color-butter: #ffd978;
+  --color-lilac: #c9b8f2;
+  --color-mint: #bde8d3;
+  --color-line: #e8d9d0;
+  --font-display: var(--font-mitr), "Mitr", system-ui, sans-serif;
+  --font-sans: var(--font-anuphan), "Anuphan", system-ui, sans-serif;
+  --breakpoint-xs: 26rem;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  overflow-x: clip;
+  line-height: 1.6;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-ink);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.on-dark :focus-visible { outline-color: var(--color-butter); }
+
+/* Buttons: 44px minimum touch target. Ink on strawberry, white on cherry both pass AA. */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  min-height: 44px; padding: .55rem 1.4rem; border-radius: 999px; border: 2px solid var(--color-ink);
+  font-weight: 600; text-align: center; cursor: pointer; text-decoration: none;
+  transition: background-color .15s, color .15s;
+}
+.btn:disabled, .btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+.btn-primary { background: var(--color-cherry); color: #fff; border-color: var(--color-cherry); }
+.btn-primary:hover:not(:disabled) { background: var(--color-cherry-deep); border-color: var(--color-cherry-deep); }
+.btn-ink { background: var(--color-ink); color: var(--color-cream); }
+.btn-ink:hover:not(:disabled) { background: #3b2d38; }
+.btn-ghost { background: transparent; color: var(--color-ink); }
+.btn-ghost:hover:not(:disabled) { background: var(--color-ink); color: var(--color-cream); }
+
+.field {
+  width: 100%; min-height: 44px; padding: .55rem .85rem; background: #fff; color: var(--color-ink);
+  border: 2px solid var(--color-ink); border-radius: 10px;
+}
+.field[aria-invalid="true"] { border-color: var(--color-cherry-deep); background: #fff4f6; }
+.label { display: block; font-weight: 600; margin-bottom: .25rem; }
+.err { color: var(--color-cherry-deep); font-size: .875rem; margin-top: .25rem; }
+
+/* Label-style typography: product names read like packaging. */
+.label-type { font-family: var(--font-display); letter-spacing: .01em; }
+
+dialog.sheet {
+  margin: 0; padding: 0; border: 0; background: var(--color-cream); color: var(--color-ink);
+  max-width: 100vw; max-height: 100dvh;
+}
+dialog.sheet::backdrop { background: rgb(36 27 34 / .55); }
+
+@keyframes sheet-in-right { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes sheet-in-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+dialog.sheet[open].from-right { animation: sheet-in-right .2s ease-out; }
+dialog.sheet[open].from-bottom { animation: sheet-in-up .2s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+.sr-only-focusable:not(:focus):not(:focus-within) {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}

@@ -1,0 +1,11 @@
+export const BTN = "btn min-h-9! px-3.5! py-1! text-sm!";
+export const BTN_PRIMARY = `${BTN} btn-primary`;
+export const BTN_GHOST = `${BTN} btn-ghost`;
+export const BTN_DANGER = `${BTN} btn-ink`;
+export const INPUT = "field min-h-9! py-1! px-2.5! text-sm! border! rounded-md!";
+export const LABEL = "block text-sm font-semibold mb-1";
+export const CARD = "rounded-lg border border-line bg-white p-4";
+export const TABLE = "w-full text-left text-sm";
+export const TH = "border-b border-line bg-cream px-3 py-2 font-semibold whitespace-nowrap";
+export const TD = "border-b border-line px-3 py-2 align-top";
+export const LINK = "underline underline-offset-2 hover:text-cherry-deep";

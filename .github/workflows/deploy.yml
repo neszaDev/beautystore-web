@@ -1,0 +1,32 @@
+# Manual, approval-gated web deployment: build, push to ACR, roll the Container App to the new digest.
+# Per GitHub environment — vars: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID,
+# AZURE_RESOURCE_GROUP, ACR_NAME, WEB_CONTAINER_APP. Infrastructure lives in beautystore-api (infra workflow).
+name: deploy
+on:
+  workflow_dispatch:
+    inputs:
+      environment: { type: choice, options: [dev, staging, prod], required: true }
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}   # configure required reviewers for staging/prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Build and push (tagged by commit, deployed by digest)
+        id: image
+        run: |
+          az acr login --name "${{ vars.ACR_NAME }}"
+          ref="${{ vars.ACR_NAME }}.azurecr.io/web:${GITHUB_SHA}"
+          docker build -t "$ref" . && docker push "$ref"
+          echo "digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$ref")" >> "$GITHUB_OUTPUT"
+      - run: |
+          az containerapp update -g "${{ vars.AZURE_RESOURCE_GROUP }}" -n "${{ vars.WEB_CONTAINER_APP }}" \
+            --image "${{ steps.image.outputs.digest }}"
